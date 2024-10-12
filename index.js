@@ -29,10 +29,7 @@ let notes = [
     }
   ]
 
-const generateMaxID=()=>{
-    const maxID= notes.length>0 ? Math.max(...notes.map(note=>Number(note.id))) : 0
-    return String(maxID+1)
-}
+
 
 
 app.get('/',(request,response)=>{
@@ -49,18 +46,21 @@ app.get('/api/notes',(request,response)=>{
 
 app.get('/api/notes/:id',(request,response)=>{
     const id = request.params.id
-    const note = notes.find(note=>note.id===id)
-    if (note){
-        response.json(note)
-    }
-    else{
-        response.status(404).end()
-    }
+    Note.findById(id).then(note=>{
+        if (note){
+            response.json(note)
+        }
+        else{
+            response.status(404).end()
+        }
+    })
+
    
 })
 
 app.delete('/api/notes/:id',(request,response)=>{
     const id =request.params.id
+    
     const note = notes.find(note=>note.id===id)
 
     response.status(204).end()
@@ -73,14 +73,16 @@ app.post('/api/notes',(request,response)=>{
             error:'content missing'
         })
     }
-    const note= {
+    const note= new Note({
         content: body.content,
-        important: Boolean(body.important) || false,
-        id: generateMaxID()
-    }
+        important: body.important || false,
+        
+    })
 
-    notes= notes.concat(note)
-    response.json(note)
+    note.save().then(saveNote=>{
+        response.json(saveNote)
+    })
+    
 })
 
 const PORT = process.env.PORT
