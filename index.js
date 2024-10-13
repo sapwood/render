@@ -44,9 +44,10 @@ app.get('/api/notes',(request,response)=>{
     
 })
 
-app.get('/api/notes/:id',(request,response)=>{
+app.get('/api/notes/:id',(request,response,next)=>{
     const id = request.params.id
-    Note.findById(id).then(note=>{
+    Note.findById(id)
+    .then(note=>{
         if (note){
             response.json(note)
         }
@@ -54,36 +55,73 @@ app.get('/api/notes/:id',(request,response)=>{
             response.status(404).end()
         }
     })
+    .catch(error=>{
+        next(error)
+    })
 
    
 })
 
-app.delete('/api/notes/:id',(request,response)=>{
+app.delete('/api/notes/:id',(request,response,next)=>{
     const id =request.params.id
     
-    const note = notes.find(note=>note.id===id)
+    Note.findByIdAndDelete(id)
+    .then(result=>{
+        response.status(204).end()
+    })
+    .catch(error=>{
+        next(error)
+    })
 
-    response.status(204).end()
 })
 
-app.post('/api/notes',(request,response)=>{
+app.put('/api/notes/:id',(request,response,next)=>{
     const body = request.body
-    if (!body.content){
-        return response.status(400).json({
-            error:'content missing'
-        })
+    const note = {
+        content: body.content,
+        important: body.important,
     }
+    Note.findByIdAndUpdate(request.params.id,note,{new:true,runValidators:true,context:'query'})
+    .then(result=>{
+        return response.json(result)
+    })
+    .catch(error=>{
+        next(error)
+    })
+})
+app.post('/api/notes',(request,response,next)=>{
+    const body = request.body
+
     const note= new Note({
         content: body.content,
         important: body.important || false,
         
     })
 
-    note.save().then(saveNote=>{
+    note.save()
+    .then(saveNote=>{
         response.json(saveNote)
+    })
+    .catch(error=>{
+        next(error)
     })
     
 })
+const unknownEndpoint = (request,response)=>{
+    return response.status(404).send({error:'unknown endpoint'})
+}
+app.use(unknownEndpoint)
+
+const errorHandler =(error,request,response,next)=>{
+    console.log(error.message)
+    if (error.name==='CastError'){
+        return response.status(400).send({error:'malformatted id'})
+    }
+    else if(error.name==='ValidationError'){
+        return response.status(400).send({error:error.message})
+    }
+}
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 
