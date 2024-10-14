@@ -11,120 +11,103 @@ app.use(express.static('dist'))
 const Note = require('./models/note')
 
 
-let notes = [
-    {
-      id: "1",
-      content: "HTML is easy",
-      important: true
-    },
-    {
-      id: "2",
-      content: "Browser can execute only JavaScript",
-      important: false
-    },
-    {
-      id: "3",
-      content: "GET and POST are the most important methods of HTTP protocol",
-      important: true
-    }
-  ]
 
 
 
 
-app.get('/',(request,response)=>{
+app.get('/',(request,response) => {
     response.send('<h1>Hello World!</h1>')
 })
 
-app.get('/api/notes',(request,response)=>{
+app.get('/api/notes',(request,response) => {
 
-    Note.find({}).then(notes=>{
+    Note.find({}).then(notes => {
         response.json(notes)
     })
-    
+
 })
 
-app.get('/api/notes/:id',(request,response,next)=>{
+app.get('/api/notes/:id',(request,response,next) => {
     const id = request.params.id
     Note.findById(id)
-    .then(note=>{
-        if (note){
-            response.json(note)
-        }
-        else{
-            response.status(404).end()
-        }
-    })
-    .catch(error=>{
-        next(error)
-    })
+        .then(note => {
+            if (note){
+                response.json(note)
+            }
+            else{
+                response.status(404).end()
+            }
+        })
+        .catch(error => {
+            next(error)
+        })
 
-   
+
 })
 
-app.delete('/api/notes/:id',(request,response,next)=>{
+app.delete('/api/notes/:id',(request,response,next) => {
     const id =request.params.id
-    
+
     Note.findByIdAndDelete(id)
-    .then(result=>{
-        response.status(204).end()
-    })
-    .catch(error=>{
-        next(error)
-    })
+        .then(() => {
+            response.status(204).end()
+        })
+        .catch(error => {
+            next(error)
+        })
 
 })
 
-app.put('/api/notes/:id',(request,response,next)=>{
+app.put('/api/notes/:id',(request,response,next) => {
     const body = request.body
     const note = {
         content: body.content,
         important: body.important,
     }
-    Note.findByIdAndUpdate(request.params.id,note,{new:true,runValidators:true,context:'query'})
-    .then(result=>{
-        return response.json(result)
-    })
-    .catch(error=>{
-        next(error)
-    })
+    Note.findByIdAndUpdate(request.params.id,note,{ new:true,runValidators:true,context:'query' })
+        .then(result => {
+            return response.json(result)
+        })
+        .catch(error => {
+            next(error)
+        })
 })
-app.post('/api/notes',(request,response,next)=>{
+app.post('/api/notes',(request,response,next) => {
     const body = request.body
 
     const note= new Note({
         content: body.content,
         important: body.important || false,
-        
+
     })
 
     note.save()
-    .then(saveNote=>{
-        response.json(saveNote)
-    })
-    .catch(error=>{
-        next(error)
-    })
-    
+        .then(saveNote => {
+            response.json(saveNote)
+        })
+        .catch(error => {
+            next(error)
+        })
+
 })
-const unknownEndpoint = (request,response)=>{
-    return response.status(404).send({error:'unknown endpoint'})
+const unknownEndpoint = (request,response) => {
+    return response.status(404).send({ error:'unknown endpoint' })
 }
 app.use(unknownEndpoint)
 
-const errorHandler =(error,request,response,next)=>{
+const errorHandler =(error,request,response) => {
     console.log(error.message)
     if (error.name==='CastError'){
-        return response.status(400).send({error:'malformatted id'})
+        return response.status(400).send({ error:'malformatted id' })
     }
     else if(error.name==='ValidationError'){
-        return response.status(400).send({error:error.message})
+        return response.status(400).send({ error:error.message })
     }
 }
 app.use(errorHandler)
 
 const PORT = process.env.PORT
 
-app.listen(PORT,()=>{
+app.listen(PORT,() => {
     console.log(`Server running on port ${PORT}`)
 })
