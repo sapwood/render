@@ -19,10 +19,11 @@ const initialNotes = [
 
 beforeEach(async () => {
     await Note.deleteMany({})
-    let newObject = new Note(initialNotes[0])
-    await newObject.save()
-    newObject = new Note(initialNotes[1])
-    await newObject.save()
+    const newObjects = initialNotes.map(note => new Note(note))
+    const promiseArray = newObjects.map(note => note.save())
+    await Promise.all(promiseArray)
+
+
 })
 
 test.only('notes are returned as json', async () => {
