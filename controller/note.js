@@ -1,61 +1,46 @@
 const route = require('express').Router()
 const Note = require('../models/note')
 
-route.get('/',(request,response) => {
-
-    Note.find({}).then(notes => {
-        response.json(notes)
-    })
+route.get('/',async (request,response) => {
+    const notes = await Note.find({})
+    response.json(notes)
+    // Note.find({}).then(notes => {
+    //     response.json(notes)
+    // })
 
 })
 
-route.get('/:id',(request,response,next) => {
+route.get('/:id',async (request,response) => {
     const id = request.params.id
-    Note.findById(id)
-        .then(note => {
-            if (note){
-                response.json(note)
-            }
-            else{
-                response.status(404).end()
-            }
-        })
-        .catch(error => {
-            next(error)
-        })
-
+    const note = await Note.findById(id)
+    if (note) {
+        response.json(note)
+    }
+    else{
+        response.status(404).end()
+    }
 
 })
 
-route.delete('/:id',(request,response,next) => {
+route.delete('/:id',async (request,response) => {
     const id =request.params.id
-
-    Note.findByIdAndDelete(id)
-        .then(() => {
-            response.status(204).end()
-        })
-        .catch(error => {
-            next(error)
-        })
+    await Note.findByIdAndDelete(id)
+    response.status(204).end()
 
 })
 
-route.put('/:id',(request,response,next) => {
+route.put('/:id',async (request,response) => {
     const body = request.body
     const note = {
         content: body.content,
         important: body.important,
     }
-    Note.findByIdAndUpdate(request.params.id,note,{ new:true,runValidators:true,context:'query' })
-        .then(result => {
-            return response.json(result)
-        })
-        .catch(error => {
-            next(error)
-        })
+    const result = await Note.findByIdAndUpdate(request.params.id,note,{ new:true,runValidators:true,context:'query' })
+    response.json(result)
+
 })
 
-route.post('/notes',(request,response,next) => {
+route.post('/',async (request,response) => {
     const body = request.body
 
     const note= new Note({
@@ -63,14 +48,10 @@ route.post('/notes',(request,response,next) => {
         important: body.important || false,
 
     })
+    const saveNote = await note.save()
+    response.json(saveNote)
 
-    note.save()
-        .then(saveNote => {
-            response.json(saveNote)
-        })
-        .catch(error => {
-            next(error)
-        })
+
 
 })
 
