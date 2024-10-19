@@ -1,10 +1,11 @@
 const usersRoute = require('express').Router()
 
 const User = require('../models/users')
+
 const bcrypt = require('bcrypt')
 
 usersRoute.get('/', async (request,response) => {
-    const result = await User.find({})
+    const result = await User.find({}).populate('notes',{ content:1,important:1 })
     response.json(result)
 
 })
