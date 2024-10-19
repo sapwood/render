@@ -27,9 +27,10 @@ app.use(express.json())
 app.use(middleware.requestLogger)
 
 const route = require('./controller/note')
-
+const usersRoute = require('./controller/users')
 
 app.use('/api/notes',route)
+app.use('/api/users',usersRoute)
 
 
 app.use(middleware.unknownEndpoint)
