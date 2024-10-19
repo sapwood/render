@@ -28,9 +28,11 @@ app.use(middleware.requestLogger)
 
 const route = require('./controller/note')
 const usersRoute = require('./controller/users')
+const loginRoute = require('./controller/login')
 
 app.use('/api/notes',route)
 app.use('/api/users',usersRoute)
+app.use('/api/login',loginRoute)
 
 
 app.use(middleware.unknownEndpoint)
